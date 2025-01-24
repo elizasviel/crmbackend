@@ -114,4 +114,55 @@ router.get(
   }
 );
 
+// Get all users (admin only)
+router.get(
+  "/",
+  authMiddleware,
+  requireRoles([UserRole.ADMIN]),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const users = await prisma.user.findMany({
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+        },
+      });
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  }
+);
+
+// Update user role (admin only)
+router.patch(
+  "/:userId/role",
+  authMiddleware,
+  requireRoles([UserRole.ADMIN]),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { role },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+        },
+      });
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update user role" });
+    }
+  }
+);
+
 export default router;

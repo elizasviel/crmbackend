@@ -5,9 +5,11 @@ import {
   AuthRequest,
   requireRoles,
 } from "../middleware/auth.middleware";
+import { Server } from "socket.io";
 
 const router = Router();
 const prisma = new PrismaClient();
+const io = new Server();
 
 /**
  * Create a new comment on a ticket
@@ -61,6 +63,19 @@ router.post(
           },
         },
       });
+
+      // After successfully creating the comment:
+      io.to(`ticket-${ticketId}`).emit("comment-added", newComment);
+
+      // If the comment is from an agent and the ticket creator is a customer
+      if (req.user?.role !== "CUSTOMER") {
+        // Notify the customer
+        io.to(`user-${existingTicket.createdById}`).emit("notification", {
+          type: "NEW_COMMENT",
+          ticketId,
+          message: `New response on ticket: ${existingTicket.title}`,
+        });
+      }
 
       res.status(201).json(newComment);
     } catch (error) {

@@ -7,7 +7,11 @@ import commentRoutes from "./routes/comment.routes";
 import teamRoutes from "./routes/team.routes";
 import queueRoutes from "./routes/queue.routes";
 import feedbackRoutes from "./routes/feedback.routes";
+import analyticsRoutes from "./routes/analytics.routes";
 import dotenv from "dotenv";
+import { Server } from "socket.io";
+import http from "http";
+import { SchedulerService } from "./services/scheduler.service";
 dotenv.config();
 
 const app = express();
@@ -36,6 +40,30 @@ app.use("/api/tickets", commentRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/queues", queueRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/analytics", analyticsRoutes);
+
+const server = http.createServer(app);
+export const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("Client connected");
+
+  socket.on("join-ticket", (ticketId) => {
+    socket.join(`ticket-${ticketId}`);
+  });
+
+  socket.on("leave-ticket", (ticketId) => {
+    socket.leave(`ticket-${ticketId}`);
+  });
+});
+
+const scheduler = new SchedulerService();
+scheduler.startJobs();
 
 const PORT = process.env.PORT || 3000;
 
@@ -44,8 +72,8 @@ async function main() {
     await prisma.$connect();
     console.log("Database connection established");
 
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);
