@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { authMiddleware, AuthRequest } from "../middleware/auth.middleware";
+import { SearchService } from "../services/search.service";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -24,6 +25,18 @@ router.get("/", async (req, res) => {
     res.json(tickets);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch tickets" });
+  }
+});
+
+// Add the search route BEFORE the /:id route
+router.get("/search", authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { query, ...filters } = req.query;
+    const searchService = new SearchService();
+    const results = await searchService.searchTickets(query as string, filters);
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to search tickets" });
   }
 });
 
