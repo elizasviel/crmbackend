@@ -1,2 +1,4 @@
 # Logs
 .env
+dist
+node_modules
