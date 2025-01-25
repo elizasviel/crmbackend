@@ -17,10 +17,15 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 
-// Use CORS
+// Replace with the array of allowed origins, or use '*'
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://crmfrontendnorman-c9fc49bd7c94.herokuapp.com",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173", // or '*'
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
