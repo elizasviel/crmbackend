@@ -50,7 +50,7 @@ app.use("/api/analytics", analyticsRoutes);
 const server = http.createServer(app);
 export const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://crmfrontendnorman-c9fc49bd7c94.herokuapp.com",
     methods: ["GET", "POST"],
   },
 });
